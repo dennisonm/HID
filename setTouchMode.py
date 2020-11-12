@@ -1,12 +1,11 @@
-import usb.core
-import usb.util
-import argparse
+import usb.core     # Core USB features.
+import usb.util     # USB utility functions.
+import argparse     # Parser for command-line options, arguments and sub-commands.
+import sys          # System-specific parameters and functions
 
-touchMode = {
-    0x03 : "Single Touch (Mouse)",
-    0x02 : "Single Touch (Digitizer)",
-    0x01 : "Multi-touch (Digitizer)"
-}
+sys.dont_write_bytecode = True  # Do not write .pyc or .pyo files on the import of source modules.
+
+import touchModes   # Supplier Touch Modes
 
 # Convert the specified value into int 
 def auto_int(x):
@@ -55,20 +54,20 @@ if __name__ == '__main__':
     print("Setting active configuration...")
     dev.set_configuration()
 
-    # Data
-    payload = [args.rid, args.did, args.mode, 0x00, 0x00, 0x00, 0x00, 0x00]
-
-    # Setup Packet
+    # Setup Packet (Setup Stage)
     # A control transfer starts with SETUP transaction which conveys 8 bytes that define the request from the host.
     bmRequestType = 0x21    # Host-to-Device (OUT)
                             # Class
                             # Interface
-    bRequest = 0x09         # Set Configuration
-    wValue = 0x03A0         # Report ID: A0
-                            # Intrface Class: 03
-    wIndex = 0x0000         # 
+    bRequest = 0x09         # SET_CONFIGURATION Request
+    wValue = 0x03A0         # [Report Type: 1-Input 2-Output 3-Feature][Report ID]
+    wIndex = 0x0000         # Interface - Not relevant in setup packet since there is only one device descriptor
     wLength = 0x0008        # Number of bytes to be transferred should there be a data phase 
-    
+
+    # Data
+    # The setup stage is followed by by zero or more control data transactions (data stage).
+    payload = [args.rid, args.did, args.mode, 0x00, 0x00, 0x00, 0x00, 0x00]
+
     # Do a control transfer on the endpoint 0
     # 
     # For host to device requests (OUT), data_or_wLength parameter is the data payload to send, 
@@ -82,9 +81,10 @@ if __name__ == '__main__':
         print("Issuing control transfer to set the touch mode...")
         ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=payload, timeout=1000 )
         #print ret
-        print("Touch Mode successfully set to " + touchMode[args.mode])
-    except:
+        print("Touch Mode successfully set to " + touchModes.touchMode[dev.manufacturer][args.mode] + ".")
+    except Exception as e:
         print("Something went wrong!")
+        print(e)
 
     # Reset the device
     dev.reset()
