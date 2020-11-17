@@ -22,16 +22,17 @@ if __name__ == '__main__':
     argparser.add_argument('--vid', help="Vendor ID", type=auto_int)
     argparser.add_argument('--pid', help="Product ID", type=auto_int)
     argparser.add_argument('--rid', help="Report ID", type=auto_int)
-    argparser.add_argument('--did', help="Device ID", type=auto_int)
-    argparser.add_argument('--mode', help="Touch Mode", type=auto_int)
+    argparser.add_argument('--of1', help="Offset 1", type=auto_int)
+    argparser.add_argument('--of2', help="Offset 2", type=auto_int)
+    argparser.add_argument('--of3', help="Offset 3", type=auto_int)
+    argparser.add_argument('--of4', help="Offset 4", type=auto_int)
+    argparser.add_argument('--of5', help="Offset 5", type=auto_int)
+    argparser.add_argument('--of6', help="Offset 6", type=auto_int)
+    argparser.add_argument('--of7', help="Offset 7", type=auto_int)
 
     # Parse the arguments
     args = argparser.parse_args()
-
     
-    # Parse the arguments
-    args = argparser.parse_args()
-
     # Find device
     dev = usb.core.find(idVendor=args.vid, idProduct=args.pid)
 
@@ -49,6 +50,7 @@ if __name__ == '__main__':
         print("Kernel driver is active.")
         print("Detaching kernel driver...")
         dev.detach_kernel_driver(bInterfaceNumber)
+    
     # The configuration parameter is the bConfigurationValue field of the configuration you want to set as active
     # If you call this method without parameter, it will use the first configuration found.
     print("Setting active configuration...")
@@ -66,7 +68,7 @@ if __name__ == '__main__':
 
     # Data
     # The setup stage is followed by by zero or more control data transactions (data stage).
-    payload = [args.rid, args.did, args.mode, 0x00, 0x00, 0x00, 0x00, 0x00]
+    payload = [args.rid, args.of1 or 0x00, args.of2 or 0x00, args.of3 or 0x00, args.of4 or 0x00, args.of5 or 0x00, args.of6 or 0x00, args.of7 or 0x00]
 
     # Do a control transfer on the endpoint 0
     # 
@@ -81,7 +83,8 @@ if __name__ == '__main__':
         print("Issuing control transfer to set the touch mode...")
         ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=payload, timeout=1000 )
         #print ret
-        print("Touch Mode successfully set to " + touchModes.touchMode[dev.manufacturer][args.mode] + ".")
+        #print("Touch Mode successfully set!")
+        print("Touch Mode successfully set to " + touchModes.touchMode[dev.manufacturer][args.of3] + ".")
     except Exception as e:
         print("Something went wrong!")
         print(e)
