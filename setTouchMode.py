@@ -53,8 +53,8 @@ if __name__ == '__main__':
     
     # The configuration parameter is the bConfigurationValue field of the configuration you want to set as active
     # If you call this method without parameter, it will use the first configuration found.
-    print("Setting active configuration...")
-    dev.set_configuration()
+    #print("Setting active configuration...")
+    #dev.set_configuration()
 
     # Setup Packet (Setup Stage)
     # A control transfer starts with SETUP transaction which conveys 8 bytes that define the request from the host.
