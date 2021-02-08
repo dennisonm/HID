@@ -1,3 +1,6 @@
+# Test script for getting HID report/feature
+# Author M R Dennison
+# 19 Jan 2021
 import usb.core     # Core USB features.
 import usb.util     # USB utility functions.
 import argparse     # Parser for command-line options, arguments and sub-commands.
@@ -84,7 +87,7 @@ if __name__ == '__main__':
         ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=wLength, timeout=1000 )
         #hex_ret = [hex(x) for x in ret]
         #print hex_ret
-        print map(hex, ret)
+        map(hex, ret)
         print("Current Touch Mode is " + touchModes.touchMode[dev.manufacturer][ret[2]] + ".")
     except Exception as e:
         print("Something went wrong!")
