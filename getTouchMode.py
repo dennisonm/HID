@@ -24,16 +24,12 @@ if __name__ == '__main__':
     # Positional/Optional parameters
     argparser.add_argument('--vid', help="Vendor ID", type=auto_int)
     argparser.add_argument('--pid', help="Product ID", type=auto_int)
-    argparser.add_argument('--rid', help="Report ID", type=auto_int)
-    argparser.add_argument('--of1', help="Offset 1", type=auto_int)
-    argparser.add_argument('--of2', help="Offset 2", type=auto_int)
-    argparser.add_argument('--of3', help="Offset 3", type=auto_int)
-    argparser.add_argument('--of4', help="Offset 4", type=auto_int)
-    argparser.add_argument('--of5', help="Offset 5", type=auto_int)
-    argparser.add_argument('--of6', help="Offset 6", type=auto_int)
-    argparser.add_argument('--of7', help="Offset 7", type=auto_int)
 
-    # Parse the arguments
+    # Handle no arguments call
+    if len(sys.argv) < 2:
+        argparser.print_usage()
+        sys.exit(1)    # Parse the arguments
+    
     args = argparser.parse_args()
     
     # Find device
@@ -65,13 +61,22 @@ if __name__ == '__main__':
                             # Class
                             # Interface
     bRequest = 0x01         # GET_REPORT Request
-    wValue = 0x03B0         # [Report Type: 1-Input 2-Output 3-Feature][Report ID]
+    if dev.manufacturer == "NanoTS":
+        wValue = 0x03A3     # [Report Type: 1-Input 2-Output 3-Feature][Report ID]
+        rid = 0xA3
+        offset = 2          # Location of the touch mode byte
+    elif dev.manufacturer == "Gamesman":
+        wValue = 0x03A0     # [Report Type: 1-Input 2-Output 3-Feature][Report ID]
+        rid = 0xA0
+        offset = 3          # Location touch mode byte
+    else:
+        raise ValueError(dev.manufacturer + ' Device not registered!')
     wIndex = 0x0000         # Interface - Not relevant in setup packet since there is only one device descriptor
     wLength = 0x0008        # Number of bytes to be transferred should there be a data phase 
 
     # Data
     # The setup stage is followed by by zero or more control data transactions (data stage).
-    payload = [args.rid, args.of1 or 0x00, args.of2 or 0x00, args.of3 or 0x00, args.of4 or 0x00, args.of5 or 0x00, args.of6 or 0x00, args.of7 or 0x00]
+    payload = [rid, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
     # Do a control transfer on the endpoint 0
     # 
@@ -88,7 +93,7 @@ if __name__ == '__main__':
         #hex_ret = [hex(x) for x in ret]
         #print hex_ret
         map(hex, ret)
-        print("Current Touch Mode is " + touchModes.touchMode[dev.manufacturer][ret[2]] + ".")
+        print("Current Touch Mode is " + touchModes.touchMode[dev.manufacturer][ret[offset]] + ".")
     except Exception as e:
         print("Something went wrong!")
         print(e)

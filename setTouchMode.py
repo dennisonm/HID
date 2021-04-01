@@ -1,7 +1,12 @@
+# Test script for changing touch modes
+# Author M R Dennison
+# 19 Jan 2021
+#import libusb
 import usb.core     # Core USB features.
 import usb.util     # USB utility functions.
 import argparse     # Parser for command-line options, arguments and sub-commands.
 import sys          # System-specific parameters and functions
+import os           # Provides functions for interacting with the operating system
 
 sys.dont_write_bytecode = True  # Do not write .pyc or .pyo files on the import of source modules.
 
@@ -21,15 +26,13 @@ if __name__ == '__main__':
     # Positional/Optional parameters
     argparser.add_argument('--vid', help="Vendor ID", type=auto_int)
     argparser.add_argument('--pid', help="Product ID", type=auto_int)
-    argparser.add_argument('--rid', help="Report ID", type=auto_int)
-    argparser.add_argument('--of1', help="Offset 1", type=auto_int)
-    argparser.add_argument('--of2', help="Offset 2", type=auto_int)
-    argparser.add_argument('--of3', help="Offset 3", type=auto_int)
-    argparser.add_argument('--of4', help="Offset 4", type=auto_int)
-    argparser.add_argument('--of5', help="Offset 5", type=auto_int)
-    argparser.add_argument('--of6', help="Offset 6", type=auto_int)
-    argparser.add_argument('--of7', help="Offset 7", type=auto_int)
+    argparser.add_argument('--mode', help="Touch Mode", type=auto_int)
 
+    # Handle no arguments call
+    if len(sys.argv) < 2:
+        argparser.print_usage()
+        sys.exit(1)
+    
     # Parse the arguments
     args = argparser.parse_args()
     
@@ -44,12 +47,13 @@ if __name__ == '__main__':
     # Interface Number
     bInterfaceNumber = dev[0].interfaces()[0].bInterfaceNumber
 
-    # Determine if a kernel driver is active on an interface.
-    # If a kernel driver is active, you cannot claim the interface, and the backend will be unable to perform I/O.
-    if dev.is_kernel_driver_active(bInterfaceNumber):
-        print("Kernel driver is active.")
-        print("Detaching kernel driver...")
-        dev.detach_kernel_driver(bInterfaceNumber)
+    if os.name != 'nt':
+        # Determine if a kernel driver is active on an interface.
+        # If a kernel driver is active, you cannot claim the interface, and the backend will be unable to perform I/O.
+        if dev.is_kernel_driver_active(bInterfaceNumber):
+            print("Kernel driver is active.")
+            print("Detaching kernel driver...")
+            dev.detach_kernel_driver(bInterfaceNumber)
     
     # The configuration parameter is the bConfigurationValue field of the configuration you want to set as active
     # If you call this method without parameter, it will use the first configuration found.
@@ -68,7 +72,7 @@ if __name__ == '__main__':
 
     # Data
     # The setup stage is followed by by zero or more control data transactions (data stage).
-    payload = [args.rid, args.of1 or 0x00, args.of2 or 0x00, args.of3 or 0x00, args.of4 or 0x00, args.of5 or 0x00, args.of6 or 0x00, args.of7 or 0x00]
+    payload = [0xA0, 0x3A, 0x00, args.mode, 0x00, 0x00, 0x00, 0x00]
 
     # Do a control transfer on the endpoint 0
     # 
@@ -84,7 +88,7 @@ if __name__ == '__main__':
         ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=payload, timeout=1000 )
         #print ret
         #print("Touch Mode successfully set!")
-        print("Touch Mode successfully set to " + touchModes.touchMode[dev.manufacturer][args.of3] + ".")
+        print("Touch Mode successfully set to " + touchModes.touchMode[dev.manufacturer][args.mode] + ".")
     except Exception as e:
         print("Something went wrong!")
         print(e)
