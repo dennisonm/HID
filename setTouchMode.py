@@ -57,8 +57,8 @@ if __name__ == '__main__':
     
     # The configuration parameter is the bConfigurationValue field of the configuration you want to set as active
     # If you call this method without parameter, it will use the first configuration found.
-    #print("Setting active configuration...")
-    #dev.set_configuration()
+    print("Setting active configuration...")
+    dev.set_configuration()
 
     # Setup Packet (Setup Stage)
     # A control transfer starts with SETUP transaction which conveys 8 bytes that define the request from the host.
@@ -85,9 +85,7 @@ if __name__ == '__main__':
     # or an array object which the data will be read to, and the return value is the number of bytes read.
     try:
         print("Issuing control transfer to set the touch mode...")
-        ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=payload, timeout=1000 )
-        #print ret
-        #print("Touch Mode successfully set!")
+        ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=payload)
         print("Touch Mode successfully set to " + touchModes.touchMode[dev.manufacturer][args.mode] + ".")
     except Exception as e:
         print("Something went wrong!")
