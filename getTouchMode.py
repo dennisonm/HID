@@ -5,8 +5,12 @@ import usb.core     # Core USB features.
 import usb.util     # USB utility functions.
 import argparse     # Parser for command-line options, arguments and sub-commands.
 import sys          # System-specific parameters and functions
+import os           # Provides functions for interacting with the operating system
+import traceback    # Provide information about the runtime error
 
 sys.dont_write_bytecode = True  # Do not write .pyc or .pyo files on the import of source modules.
+
+os.environ['PYUSB_DEBUG'] = 'debug'
 
 import touchModes   # Supplier Touch Modes
 
@@ -38,22 +42,30 @@ if __name__ == '__main__':
     # Was it found?
     if dev is None:
         raise ValueError('Device not found')
-    print("Found " + dev.manufacturer + " for " + dev.product + ".")
+        
+    print("Found " + dev.product +  " from " + dev.manufacturer + ".")
 
     # Interface Number
     bInterfaceNumber = dev[0].interfaces()[0].bInterfaceNumber
 
-    # Determine if a kernel driver is active on an interface.
-    # If a kernel driver is active, you cannot claim the interface, and the backend will be unable to perform I/O.
-    if dev.is_kernel_driver_active(bInterfaceNumber):
-        print("Kernel driver is active.")
-        print("Detaching kernel driver...")
-        dev.detach_kernel_driver(bInterfaceNumber)
+    if os.name != 'nt':
+        # Determine if a kernel driver is active on an interface.
+        # If a kernel driver is active, you cannot claim the interface, and the backend will be unable to perform I/O.
+        if dev.is_kernel_driver_active(bInterfaceNumber):
+            print("Kernel driver is active.")
+            print("Detaching kernel driver...")
+            dev.detach_kernel_driver(bInterfaceNumber)
     
     # The configuration parameter is the bConfigurationValue field of the configuration you want to set as active
     # If you call this method without parameter, it will use the first configuration found.
-    #print("Setting active configuration...")
-    #dev.set_configuration()
+    try:
+        print("Setting active configuration...")
+        dev.set_configuration()
+        print ("Configuration set.")
+
+    except Exception as e:
+        print ("Configuration not set.")
+        traceback.print_exc()
 
     # Setup Packet (Setup Stage)
     # A control transfer starts with SETUP transaction which conveys 8 bytes that define the request from the host.
@@ -76,7 +88,6 @@ if __name__ == '__main__':
 
     # Data
     # The setup stage is followed by by zero or more control data transactions (data stage).
-    payload = [rid, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
     # Do a control transfer on the endpoint 0
     # 
@@ -89,14 +100,12 @@ if __name__ == '__main__':
     # or an array object which the data will be read to, and the return value is the number of bytes read.
     try:
         print("Issuing control transfer to get the touch mode...")
-        ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=wLength, timeout=1000 )
-        #hex_ret = [hex(x) for x in ret]
-        #print hex_ret
+        print("Sending " + '{:02X}'.format(bmRequestType)  + " " + '{:02X}'.format(bRequest) + " " + '{:04X}'.format(wValue) + " " + '{:04X}'.format(wIndex) + " " + '{:04X}'.format(wLength) + "...")
+        ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=wLength)
+        hex_ret = ['{:02X}'.format(x) for x in ret]
+        print("Received: ", hex_ret)
         map(hex, ret)
         print("Current Touch Mode is " + touchModes.touchMode[dev.manufacturer][ret[offset]] + ".")
     except Exception as e:
         print("Something went wrong!")
-        print(e)
-
-    # Reset the device
-    dev.reset()
+        traceback.print_exc()        

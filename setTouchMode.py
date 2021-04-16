@@ -7,8 +7,11 @@ import usb.util     # USB utility functions.
 import argparse     # Parser for command-line options, arguments and sub-commands.
 import sys          # System-specific parameters and functions
 import os           # Provides functions for interacting with the operating system
+import traceback    # Provide information about the runtime error
 
 sys.dont_write_bytecode = True  # Do not write .pyc or .pyo files on the import of source modules.
+
+os.environ['PYUSB_DEBUG'] = 'debug'
 
 import touchModes   # Supplier Touch Modes
 
@@ -42,7 +45,8 @@ if __name__ == '__main__':
     # Was it found?
     if dev is None:
         raise ValueError('Device not found')
-    print("Found " + dev.manufacturer + " for " + dev.product + ".")
+    
+    print("Found " + dev.product +  " from " + dev.manufacturer + ".")
 
     # Interface Number
     bInterfaceNumber = dev[0].interfaces()[0].bInterfaceNumber
@@ -85,11 +89,12 @@ if __name__ == '__main__':
     # or an array object which the data will be read to, and the return value is the number of bytes read.
     try:
         print("Issuing control transfer to set the touch mode...")
+        print("Sending " + '{:02X}'.format(bmRequestType)  + " " + '{:02X}'.format(bRequest) + " " + '{:04X}'.format(wValue) + " " + '{:04X}'.format(wIndex) + " " + '{:04X}'.format(wLength) + "...")
         ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=payload)
         print("Touch Mode successfully set to " + touchModes.touchMode[dev.manufacturer][args.mode] + ".")
     except Exception as e:
         print("Something went wrong!")
-        print(e)
+        traceback.print_exc()
 
     # Reset the device
     dev.reset()
