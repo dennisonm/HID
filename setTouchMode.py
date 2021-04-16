@@ -80,9 +80,12 @@ if __name__ == '__main__':
     wIndex = 0x0000         # Interface - Not relevant in setup packet since there is only one device descriptor
     wLength = 0x0008        # Number of bytes to be transferred should there be a data phase 
 
+    # Report ID
+    rid = int(wValue & 0xFF)
+    
     # Data
     # The setup stage is followed by by zero or more control data transactions (data stage).
-    payload = [0xA0, 0x3A, 0x00, args.mode, 0x00, 0x00, 0x00, 0x00]
+    payload = [rid, 0x3A, 0x00, args.mode, 0x00, 0x00, 0x00, 0x00]
 
     # Do a control transfer on the endpoint 0
     # 

@@ -75,11 +75,9 @@ if __name__ == '__main__':
     bRequest = 0x01         # GET_REPORT Request
     if dev.manufacturer == "NanoTS":
         wValue = 0x03A3     # [Report Type: 1-Input 2-Output 3-Feature][Report ID]
-        rid = 0xA3
         offset = 2          # Location of the touch mode byte
     elif dev.manufacturer == "Gamesman":
         wValue = 0x03A0     # [Report Type: 1-Input 2-Output 3-Feature][Report ID]
-        rid = 0xA0
         offset = 3          # Location touch mode byte
     else:
         raise ValueError(dev.manufacturer + ' Device not registered!')
