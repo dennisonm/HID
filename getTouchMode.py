@@ -59,7 +59,7 @@ if __name__ == '__main__':
     # The configuration parameter is the bConfigurationValue field of the configuration you want to set as active
     # If you call this method without parameter, it will use the first configuration found.
     try:
-        if os.name != 'nt':
+        if os.name == 'nt':
             print("Setting active configuration...")
             dev.set_configuration()
             print ("Configuration set.")
@@ -103,7 +103,7 @@ if __name__ == '__main__':
         print("Sending " + '{:02X}'.format(bmRequestType)  + " " + '{:02X}'.format(bRequest) + " " + '{:04X}'.format(wValue) + " " + '{:04X}'.format(wIndex) + " " + '{:04X}'.format(wLength) + "...")
         ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=wLength)
         hex_ret = ['{:02X}'.format(x) for x in ret]
-        print("Received: ", hex_ret)
+        print("Received: " + str(hex_ret))
         map(hex, ret)
         print("Current Touch Mode is " + touchModes.touchMode[dev.manufacturer][ret[offset]] + ".")
     except Exception as e:

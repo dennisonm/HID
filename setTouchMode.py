@@ -62,7 +62,7 @@ if __name__ == '__main__':
     # The configuration parameter is the bConfigurationValue field of the configuration you want to set as active
     # If you call this method without parameter, it will use the first configuration found.
     try:
-        if os.name != 'nt':
+        if os.name == 'nt':
             print("Setting active configuration...")
             dev.set_configuration()
             print ("Configuration set.")
