@@ -1,7 +1,7 @@
 # Test script for changing touch modes
 # Author M R Dennison
 # 19 Jan 2021
-#import libusb
+
 import usb.core     # Core USB features.
 import usb.util     # USB utility functions.
 import argparse     # Parser for command-line options, arguments and sub-commands.
@@ -79,13 +79,13 @@ if __name__ == '__main__':
     wValue = 0x03A0         # [Report Type: 1-Input 2-Output 3-Feature][Report ID]
     wIndex = 0x0000         # Interface - Not relevant in setup packet since there is only one device descriptor
     wLength = 0x0008        # Number of bytes to be transferred should there be a data phase 
-
+    
     # Report ID
     rid = int(wValue & 0xFF)
     
     # Data
     # The setup stage is followed by by zero or more control data transactions (data stage).
-    payload = [rid, 0x3A, 0x00, args.mode, 0x00, 0x00, 0x00, 0x00]
+    dataPacket = [rid, 0x3A, 0x00, args.mode, 0x00, 0x00, 0x00, 0x00]
 
     # Do a control transfer on the endpoint 0
     # 
@@ -98,9 +98,18 @@ if __name__ == '__main__':
     # or an array object which the data will be read to, and the return value is the number of bytes read.
     try:
         print("Issuing control transfer to set the touch mode...")
-        print("Sending " + '{:02X}'.format(bmRequestType)  + " " + '{:02X}'.format(bRequest) + " " + '{:04X}'.format(wValue) + " " + '{:04X}'.format(wIndex) + " " + '{:04X}'.format(wLength) + "...")
-        ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=payload)
-        print("Touch Mode successfully set to " + touchModes.touchMode[dev.manufacturer][args.mode] + ".")
+
+        hex_dataPacket = ['{:02X}'.format(x) for x in dataPacket]
+        hex_setupPacket = ['{:02X}'.format(bmRequestType), '{:02X}'.format(bRequest), '{:04X}'.format(wValue), '{:04X}'.format(wIndex), '{:04X}'.format(wLength)]
+        
+        print("Sending setup packet: " + str(hex_setupPacket) + " and data packet: " + str(hex_dataPacket) + "...")
+        
+        ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=dataPacket)
+        
+        if ret == 8:
+            print("Touch Mode successfully set to " + touchModes.touchMode[dev.manufacturer][args.mode] + ".")        
+        else:
+            raise ValueError("Expected return value of 8 bytes but received " + ret)
     except Exception as e:
         print("Something went wrong!")
         traceback.print_exc()

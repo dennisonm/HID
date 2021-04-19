@@ -1,6 +1,7 @@
-# Test script for getting HID report/feature
+# Test script for getting the current touch mode
 # Author M R Dennison
 # 19 Jan 2021
+
 import usb.core     # Core USB features.
 import usb.util     # USB utility functions.
 import argparse     # Parser for command-line options, arguments and sub-commands.
@@ -98,10 +99,11 @@ if __name__ == '__main__':
     # or an array object which the data will be read to, and the return value is the number of bytes read.
     try:
         print("Issuing control transfer to get the touch mode...")
-        print("Sending " + '{:02X}'.format(bmRequestType)  + " " + '{:02X}'.format(bRequest) + " " + '{:04X}'.format(wValue) + " " + '{:04X}'.format(wIndex) + " " + '{:04X}'.format(wLength) + "...")
+        hex_setupPacket = ['{:02X}'.format(bmRequestType), '{:02X}'.format(bRequest), '{:04X}'.format(wValue), '{:04X}'.format(wIndex), '{:04X}'.format(wLength)]
+        print("Sending " + str(hex_setupPacket) + "...")
         ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=wLength)
         hex_ret = ['{:02X}'.format(x) for x in ret]
-        print("Received: " + str(hex_ret))
+        print("Response received: " + str(hex_ret))
         map(hex, ret)
         print("Current Touch Mode is " + touchModes.touchMode[dev.manufacturer][ret[offset]] + ".")
     except Exception as e:
