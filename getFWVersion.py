@@ -139,8 +139,7 @@ if __name__ == '__main__':
         print(str(hex_dataPacket))
         ret = outPoint.write(dataPacket)
     except Exception as e:
-        print(cRed, "Something went wrong during write!") 
-        print(e, cEnd)
+        print("Something went wrong during write!") 
         traceback.print_exc()
     
     # Read data from the endpoint.
