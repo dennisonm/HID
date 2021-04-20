@@ -1,6 +1,6 @@
 # Test script for parsing the FW version number from bInterfaceNumber 1
 # Author M R Dennison
-# 19 Apr 2021
+# 20 Apr 2021
 
 import usb.core     # Core USB features.
 import usb.util     # USB utility functions.
@@ -14,17 +14,20 @@ import traceback    # Provide information about the runtime error
 
 sys.dont_write_bytecode = True  # Do not write .pyc or .pyo files on the import of source modules.
 
-cRed = '\033[91m'
-cYellow = '\33[33m'
-cBlue = '\33[34m'
-cEnd = '\033[0m'
-
 # Convert the specified value into int 
 def auto_int(x):
     return int(x, 0)
 
 # Main
 if __name__ == '__main__':
+    # Avoiding UnicodeDecodeError
+    if sys.version_info[0] < 3 and sys.getdefaultencoding() != 'utf-8':
+        stdin, stdout, stderr = sys.stdin, sys.stdout, sys.stderr                                 
+        # The magic trick that enables us to call setdefaultencoding()
+        reload(sys)
+        sys.stdin, sys.stdout, sys.stderr = stdin, stdout, stderr                                
+        sys.setdefaultencoding(os.environ.get('PYTHONIOENCODING', 'utf-8'))
+
     # Initialise arg parser
     argparser = argparse.ArgumentParser(
         description="Get FW version number."
@@ -50,15 +53,15 @@ if __name__ == '__main__':
     
     print("Found " + dev.product +  " from " + dev.manufacturer + ".")
 
-    # Interface Number
-    bIntNum = dev[0].interfaces()[0].bInterfaceNumber
+    # Target Interface 
+    bIntNum = 1;
 
     if os.name != 'nt':
         # Determine if a kernel driver is active on an interface.
         # If a kernel driver is active, you cannot claim the interface, and the backend will be unable to perform I/O.
         if dev.is_kernel_driver_active(bIntNum):
             print("Kernel driver is active.")
-            print("Detaching kernel driver of " + bIntNum + "...")
+            print("Detaching kernel driver of " + str(bIntNum) + "...")
             dev.detach_kernel_driver(bIntNum)
     
     # The configuration parameter is the bConfigurationValue field of the configuration you want to set as active
@@ -85,15 +88,20 @@ if __name__ == '__main__':
     interface = cfg[(1, 0)]
 
     # Explicitly claim an interface
+    # Users normally do not have to worry about interface claiming,
+    # as the library takes care of it automatically. But there are situations
+    # where you need deterministic interface claiming. For these uncommon
+    # cases, you can use claim_interface.
+    # If the interface is already claimed, either through a previously call
+    # to claim_interface or internally by the device object, nothing happens.    
     print("Trying to claim device...")
     try:
         usb.util.claim_interface(dev, interface)
-        print(interface)
         print("Claimed device.")
     except usb.core.USBError as e:
-        print("Error occurred claiming " + str(e))
-        sys.exit("Error occurred on claiming")
-    
+        print("Error occurred claiming ")
+        traceback.print_exc()
+
     # Get the OUT descriptor
     outPoint = usb.util.find_descriptor(
         interface,
@@ -150,9 +158,10 @@ if __name__ == '__main__':
         print("Received " + str(inPoint.wMaxPacketSize) + " from bEndpointAddress " + hex(inPoint.bEndpointAddress) + "...")
         print(str(hex_ret))
         map(hex, ret)
-        print(cYellow, "FW Version:  v" + str(ret[8]) + "." + str(ret[10]))  
-        print(cEnd)
+        print("FW Version:  v" + str(ret[8]) + "." + str(ret[10]))  
     except Exception as e:
-        print(cRed, "Something went wrong during read!")
-        print(e, cEnd)
+        print("Something went wrong during read!")
         traceback.print_exc()
+
+    # release the device
+    usb.util.release_interface(dev, interface)
