@@ -113,6 +113,3 @@ if __name__ == '__main__':
     except Exception as e:
         print("Something went wrong!")
         traceback.print_exc()
-
-    # Reset the device
-    #dev.reset()
