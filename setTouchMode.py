@@ -76,7 +76,10 @@ if __name__ == '__main__':
                             # Class
                             # Interface
     bRequest = 0x09         # SET_CONFIGURATION Request
-    wValue = 0x03A0         # [Report Type: 1-Input 2-Output 3-Feature][Report ID]
+    if dev.manufacturer == "Kortek":
+        wValue = 0x0371     # [Report Type: 1-Input 2-Output 3-Feature][Report ID]   
+    else:
+        wValue = 0x03A0     # [Report Type: 1-Input 2-Output 3-Feature][Report ID]
     wIndex = 0x0000         # Interface - Not relevant in setup packet since there is only one device descriptor
     wLength = 0x0008        # Number of bytes to be transferred should there be a data phase 
     
@@ -85,8 +88,10 @@ if __name__ == '__main__':
     
     # Data
     # The setup stage is followed by by zero or more control data transactions (data stage).
-    dataPacket = [rid, 0x3A, 0x00, args.mode, 0x00, 0x00, 0x00, 0x00]
-
+    if dev.manufacturer == "Kortek":
+        dataPacket = [rid, 0x3A, args.mode, 0x00, 0x00, 0x00, 0x00, 0x00]
+    else:
+        dataPacket = [rid, 0x3A, 0x00, args.mode, 0x00, 0x00, 0x00, 0x00]
     # Do a control transfer on the endpoint 0
     # 
     # For host to device requests (OUT), data_or_wLength parameter is the data payload to send, 
@@ -107,9 +112,20 @@ if __name__ == '__main__':
         ret = dev.ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_or_wLength=dataPacket)
         
         if ret == 8:
-            print("Touch Mode successfully set to " + touchModes.touchMode[dev.manufacturer][args.mode] + ".")        
+            print("Touch Mode successfully set to " + touchModes.touchMode[dev.manufacturer][args.mode] + ".")
+            if os.name != 'nt':
+                if args.mode == 0x01 or args.mode == 0x02:
+                    print("Re-attaching kernel driver of interface " +str(bInterfaceNumber) + "..."),
+                    try:
+                        usb.util.release_interface(dev, bInterfaceNumber)
+                        dev.attach_kernel_driver(bInterfaceNumber)
+                        print("Done.")
+                    except:
+                        print("Failed to re-attach interface " + str(bInterfaceNumber) + "!")
+                        traceback.print_exc()
         else:
             raise ValueError("Expected return value of 8 bytes but received " + ret)
+            exit(0)
     except Exception as e:
         print("Something went wrong!")
         traceback.print_exc()
