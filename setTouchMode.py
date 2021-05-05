@@ -124,7 +124,7 @@ if __name__ == '__main__':
                         print("Failed to re-attach interface " + str(bInterfaceNumber) + "!")
                         traceback.print_exc()
         else:
-            raise ValueError("Expected return value of 8 bytes but received " + ret)
+            raise ValueError("Expected return value of 8 bytes but received " + str(ret))
             exit(0)
     except Exception as e:
         print("Something went wrong!")
