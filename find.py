@@ -20,6 +20,11 @@ if __name__ == '__main__':
     argparser.add_argument('--vid', help="Vendor ID", type=auto_int)
     argparser.add_argument('--pid', help="Product ID", type=auto_int)
 
+    # Handle no arguments call
+    if len(sys.argv) < 2:
+        argparser.print_usage()
+        sys.exit(1)    # Parse the arguments
+        
     # Parse the arguments
     args = argparser.parse_args()
     

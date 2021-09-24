@@ -63,6 +63,9 @@ if __name__ == '__main__':
             print("Kernel driver is active.")
             print("Detaching kernel driver of " + str(bIntNum) + "...")
             dev.detach_kernel_driver(bIntNum)
+    else:
+        print("System32 exists: %s" % os.path.exists("C:\\Windows\\System32"))
+        print("libusb-1.0.dll exists: %s" % os.path.exists("C:\\Windows\\System32\\libusb-1.0.dll"))
     
     # The configuration parameter is the bConfigurationValue field of the configuration you want to set as active
     # If you call this method without parameter, it will use the first configuration found.
